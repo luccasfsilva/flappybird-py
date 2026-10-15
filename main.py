@@ -5,6 +5,7 @@ Controles:
     R                                         -> reiniciar (após perder)
     ESC                                       -> sair
 """
+import asyncio
 import random
 import sys
 from pathlib import Path
@@ -137,9 +138,9 @@ class Game:
         pygame.display.set_caption("Flappy Bird")
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         self.clock = pygame.time.Clock()
-        self.font_big = pygame.font.SysFont("arial", 56, bold=True)
-        self.font_med = pygame.font.SysFont("arial", 28, bold=True)
-        self.font_small = pygame.font.SysFont("arial", 18)
+        self.font_big = pygame.font.Font(None, 72)
+        self.font_med = pygame.font.Font(None, 38)
+        self.font_small = pygame.font.Font(None, 24)
         self.highscore = load_highscore()
         self.ground_offset = 0
         self.clouds = [
@@ -282,17 +283,18 @@ class Game:
         pygame.quit()
         sys.exit()
 
-    def run(self):
+    async def run(self):
         while True:
             self.handle_events()
             self.update()
             self.draw()
             self.clock.tick(FPS)
+            await asyncio.sleep(0)  # cede o controle ao navegador (pygbag)
 
 
-def main():
-    Game().run()
+async def main():
+    await Game().run()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
