@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Flappy Bird (C++ / WebAssembly)</title>
+<style>
+  :root { --bg: #1b1f27; --fg: #e8eaed; }
+  @media (prefers-color-scheme: light) { :root { --bg: #e9eef2; --fg: #1b1f27; } }
+  html, body { height: 100%; margin: 0; }
+  body { background: var(--bg); color: var(--fg); display: flex; flex-direction: column;
+         align-items: center; justify-content: center; font-family: Arial, sans-serif;
+         touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+  canvas { height: min(92vh, 150vw); aspect-ratio: 2 / 3; max-width: 100%;
+           border-radius: 8px; box-shadow: 0 8px 30px rgba(0,0,0,.35); outline: none; }
+  p { margin: 10px 0 0; font-size: 14px; opacity: .75; text-align: center; }
+  a { color: inherit; }
+</style>
+</head>
+<body>
+<canvas id="canvas" width="400" height="600" tabindex="-1" oncontextmenu="event.preventDefault()"></canvas>
+<p>Espaço, ↑ ou clique para pular · R reinicia · <a href="../">versão Python</a> · <a href="../js/">versão JS</a></p>
+<script>
+  var Module = { canvas: document.getElementById('canvas') };
+</script>
+{{{ SCRIPT }}}
+</body>
+</html>
