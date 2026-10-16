@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Flappy Bird (JavaScript)</title>
+<style>
+  :root { --bg: #1b1f27; --fg: #e8eaed; }
+  @media (prefers-color-scheme: light) { :root { --bg: #e9eef2; --fg: #1b1f27; } }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg); color: var(--fg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-family: Arial, Helvetica, sans-serif;
+    touch-action: manipulation; -webkit-user-select: none; user-select: none;
+  }
+  canvas {
+    height: min(92vh, 150vw); aspect-ratio: 2 / 3; max-width: 100%;
+    border-radius: 8px; box-shadow: 0 8px 30px rgba(0,0,0,.35); cursor: pointer;
+  }
+  p { margin: 10px 0 0; font-size: 14px; opacity: .75; text-align: center; }
+  a { color: inherit; }
+</style>
+</head>
+<body>
+<canvas id="game" width="400" height="600"></canvas>
+<p>Espaço, ↑ ou toque/clique para pular · R reinicia · <a href="../">versão Python</a></p>
+
+<script>
+"use strict";
+// ----------------------------- Configurações ------------------------------
+const W = 400, H = 600, GROUND_H = 80;
+const GRAVITY = 0.45, FLAP = -7.5, MAX_FALL = 10;
+const PIPE_W = 64, PIPE_GAP = 150, PIPE_SPEED = 3, PIPE_SPACING = 230, PIPE_MIN_TOP = 60;
+const BIRD_X = 90, BIRD_R = 13;
+const STEP = 1000 / 60;
+
+const C = {
+  sky: "#71c5cf", cloud: "#f0fafa", groundTop: "#ded895", dark: "#543847",
+  green: "#73bf2e", stripe: "#64a028", yellow: "#fad732", black: "#1e1e1e",
+  white: "#ffffff", beak: "#f06428",
+};
+
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+// ------------------------------- Recorde ----------------------------------
+function loadHighscore() {
+  try { return parseInt(localStorage.getItem("flappy-highscore"), 10) || 0; }
+  catch (e) { return 0; }
+}
+function saveHighscore(v) {
+  try { localStorage.setItem("flappy-highscore", String(v)); } catch (e) {}
+}
+
+// -------------------------------- Estado ----------------------------------
+const MENU = "menu", PLAYING = "playing", GAME_OVER = "game_over";
+let state, bird, pipes, score, groundOffset = 0;
+let highscore = loadHighscore();
+let clouds = Array.from({ length: 5 }, () => ({
+  x: Math.random() * W, y: 40 + Math.random() * 260, s: 30 + Math.random() * 25,
+}));
+
+function newPipe(x) {
+  const maxTop = H - GROUND_H - PIPE_GAP - PIPE_MIN_TOP;
+  return { x, top: PIPE_MIN_TOP + Math.floor(Math.random() * (maxTop - PIPE_MIN_TOP + 1)), scored: false };
+}
+
+function reset() {
+  bird = { y: H / 2 - 40, vel: 0 };
+  pipes = [newPipe(W + 100)];
+  score = 0;
+  state = MENU;
+}
+
+function flapOrStart() {
+  if (state === MENU) { state = PLAYING; bird.vel = FLAP; }
+  else if (state === PLAYING) { bird.vel = FLAP; }
+}
+
+function gameOver() {
+  state = GAME_OVER;
+  if (score > highscore) { highscore = score; saveHighscore(highscore); }
+}
+
+// ------------------------------ Atualização -------------------------------
+function scrollWorld() {
+  groundOffset = (((groundOffset - PIPE_SPEED) % 24) + 24) % 24;
+  for (const c of clouds) { c.x = c.x > -80 ? c.x - 0.5 : W + 40; }
+}
+
+function hitboxHits(pipe) {
+  const r = BIRD_R, bx = BIRD_X - r + 2, by = bird.y - r + 2, bs = 2 * r - 4;
+  const bottomY = pipe.top + PIPE_GAP;
+  const hitsTop = bx < pipe.x + PIPE_W && bx + bs > pipe.x && by < pipe.top;
+  const hitsBottom = bx < pipe.x + PIPE_W && bx + bs > pipe.x && by + bs > bottomY;
+  return hitsTop || hitsBottom;
+}
+
+function update() {
+  const groundY = H - GROUND_H - BIRD_R;
+
+  if (state === MENU) {
+    bird.y = H / 2 - 40 + (Math.floor(Date.now() / 300) % 2 ? 6 : -6);
+    scrollWorld();
+    return;
+  }
+  if (state === GAME_OVER) {
+    if (bird.y < groundY) {
+      bird.vel = Math.min(bird.vel + GRAVITY, MAX_FALL);
+      bird.y = Math.min(bird.y + bird.vel, groundY);
+    }
+    return;
+  }
+
+  scrollWorld();
+  bird.vel = Math.min(bird.vel + GRAVITY, MAX_FALL);
+  bird.y += bird.vel;
+
+  for (const p of pipes) {
+    p.x -= PIPE_SPEED;
+    if (!p.scored && p.x + PIPE_W < BIRD_X) { p.scored = true; score++; }
+    if (hitboxHits(p)) { gameOver(); return; }
+  }
+  if (pipes[pipes.length - 1].x < W - PIPE_SPACING) pipes.push(newPipe(W));
+  pipes = pipes.filter(p => p.x + PIPE_W >= 0);
+
+  if (bird.y + BIRD_R >= H - GROUND_H || bird.y - BIRD_R < -40) {
+    bird.y = Math.min(bird.y, groundY);
+    gameOver();
+  }
+}
+
+// -------------------------------- Desenho ---------------------------------
+function text(str, size, x, y) {
+  ctx.font = `bold ${size}px Arial, Helvetica, sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = C.black; ctx.fillText(str, x + 2, y + 2);
+  ctx.fillStyle = C.white; ctx.fillText(str, x, y);
+}
+
+function circle(x, y, r, color) {
+  ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+}
+
+function drawPipePart(x, y, w, h) {
+  ctx.fillStyle = C.green; ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = C.dark; ctx.lineWidth = 3; ctx.strokeRect(x + 1.5, y + 1.5, w - 3, h - 3);
+}
+
+function drawPipe(p) {
+  const bottomY = p.top + PIPE_GAP, bottomH = H - GROUND_H - bottomY;
+  drawPipePart(p.x, 0, PIPE_W, p.top);
+  drawPipePart(p.x - 4, p.top - 24, PIPE_W + 8, 24);
+  drawPipePart(p.x, bottomY, PIPE_W, bottomH);
+  drawPipePart(p.x - 4, bottomY, PIPE_W + 8, 24);
+}
+
+function drawGround() {
+  const y = H - GROUND_H;
+  ctx.fillStyle = C.groundTop; ctx.fillRect(0, y, W, GROUND_H);
+  ctx.fillStyle = C.green; ctx.fillRect(0, y, W, 14);
+  ctx.strokeStyle = C.dark; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  ctx.strokeStyle = C.stripe; ctx.lineWidth = 6;
+  for (let x = -24; x < W + 24; x += 24) {
+    ctx.beginPath();
+    ctx.moveTo(x + groundOffset, y + 2); ctx.lineTo(x + groundOffset + 12, y + 12);
+    ctx.stroke();
+  }
+}
+
+function drawBird() {
+  const angle = bird.vel > 0 ? Math.min(bird.vel * 4, 70) : -25;
+  ctx.save();
+  ctx.translate(BIRD_X, bird.y);
+  ctx.rotate(angle * Math.PI / 180);
+  ctx.fillStyle = C.black; ctx.beginPath(); ctx.ellipse(-2, 0, 16, 14, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = C.yellow; ctx.beginPath(); ctx.ellipse(-2, 0, 14, 12, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = "#f0f0f0"; ctx.beginPath(); ctx.ellipse(-9, 4, 7, 5, 0, 0, 7); ctx.fill();
+  circle(5, -4, 6, C.white); circle(7, -4, 3, C.black);
+  ctx.fillStyle = C.beak; ctx.beginPath();
+  ctx.moveTo(10, 2); ctx.lineTo(19, 4); ctx.lineTo(10, 8); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+
+function draw() {
+  ctx.fillStyle = C.sky; ctx.fillRect(0, 0, W, H);
+  for (const c of clouds) {
+    circle(c.x, c.y, c.s, C.cloud);
+    circle(c.x + c.s * 0.7, c.y + 6, c.s * 0.7, C.cloud);
+    circle(c.x - c.s * 0.7, c.y + 8, c.s * 0.6, C.cloud);
+  }
+  pipes.forEach(drawPipe);
+  drawGround();
+  drawBird();
+
+  if (state === MENU) {
+    text("Flappy Bird", 56, W / 2, 150);
+    text("ESPAÇO ou clique para pular", 18, W / 2, 400);
+    text("Recorde: " + highscore, 18, W / 2, 430);
+  } else if (state === PLAYING) {
+    text(String(score), 56, W / 2, 70);
+  } else {
+    text("Game Over", 56, W / 2, 170);
+    text("Pontos: " + score, 28, W / 2, 250);
+    text("Recorde: " + highscore, 28, W / 2, 290);
+    text("Pressione R ou toque para reiniciar", 18, W / 2, 350);
+  }
+}
+
+// ------------------------------ Entrada / loop ----------------------------
+function pressAction() {
+  if (state === GAME_OVER) reset(); else flapOrStart();
+}
+
+window.addEventListener("keydown", (e) => {
+  if (e.code === "Space" || e.code === "ArrowUp") { e.preventDefault(); flapOrStart(); }
+  else if (e.code === "KeyR" && state === GAME_OVER) reset();
+});
+canvas.addEventListener("pointerdown", (e) => { e.preventDefault(); pressAction(); });
+
+let last = 0, acc = 0;
+function frame(ts) {
+  acc += Math.min(ts - last, 200);  // passo fixo de 60 FPS, igual à versão Python
+  last = ts;
+  while (acc >= STEP) { update(); acc -= STEP; }
+  draw();
+  requestAnimationFrame(frame);
+}
+
+reset();
+requestAnimationFrame((ts) => { last = ts; frame(ts); });
+</script>
+</body>
+</html>
