@@ -1,6 +1,6 @@
 # 🐤 Flappy Bird em Python
 
-▶️ **[Jogue online](https://luccasfsilva.github.io/flappybird-py/)**
+▶️ **Jogue online:** [versão Python (Pygbag)](https://luccasfsilva.github.io/flappybird-py/) · [versão JavaScript](https://luccasfsilva.github.io/flappybird-py/js/)
 
 Clone do clássico Flappy Bird feito com [Pygame](https://www.pygame.org/).
 Não usa imagens nem sons externos: tudo é desenhado por código, então o projeto é um único arquivo.
@@ -44,9 +44,14 @@ pygbag .
 # abra http://localhost:8000
 ```
 
+## Versão JavaScript
+
+Em `js/index.html` há a mesma lógica do jogo em JavaScript puro (HTML5 Canvas), sem dependências.
+Para jogar localmente, basta abrir o arquivo no navegador. Ela é publicada em `/js/` junto com a versão Python.
+
 ## Personalização
 
-As constantes no topo do `main.py` controlam a dificuldade:
+As constantes no topo do `main.py` (ou do `<script>` em `js/index.html`) controlam a dificuldade:
 `GRAVITY`, `FLAP_STRENGTH`, `PIPE_GAP`, `PIPE_SPEED` e `PIPE_SPACING`.
 
 ## Licença
