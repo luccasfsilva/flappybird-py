@@ -30,6 +30,9 @@ jobs:
       - name: Compilar para WebAssembly
         run: python -m pygbag --build .
 
+      - name: Incluir versão JavaScript em /js/
+        run: cp -r js build/web/js
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: build/web
