@@ -39,7 +39,7 @@ jobs:
       - name: Compilar C++ para WebAssembly em /cpp/
         run: |
           mkdir -p build/web/cpp
-          emcc cpp/main.cpp -O2 -std=c++17 -sUSE_SDL=2 \
+           em++ cpp/main.cpp -O2 -std=c++17 -sUSE_SDL=2 \
             --shell-file cpp/shell.html -o build/web/cpp/index.html
 
       - uses: actions/upload-pages-artifact@v3
