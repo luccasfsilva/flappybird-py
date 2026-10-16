@@ -1,6 +1,6 @@
 # 🐤 Flappy Bird em Python
 
-▶️ **Jogue online:** [versão Python (Pygbag)](https://luccasfsilva.github.io/flappybird-py/) · [versão JavaScript](https://luccasfsilva.github.io/flappybird-py/js/)
+▶️ **Jogue online:** [versão Python (Pygbag)](https://luccasfsilva.github.io/flappybird-py/) · [versão JavaScript](https://luccasfsilva.github.io/flappybird-py/js/) · [versão C++](https://luccasfsilva.github.io/flappybird-py/cpp/)
 
 Clone do clássico Flappy Bird feito com [Pygame](https://www.pygame.org/).
 Não usa imagens nem sons externos: tudo é desenhado por código, então o projeto é um único arquivo.
@@ -49,9 +49,26 @@ pygbag .
 Em `js/index.html` há a mesma lógica do jogo em JavaScript puro (HTML5 Canvas), sem dependências.
 Para jogar localmente, basta abrir o arquivo no navegador. Ela é publicada em `/js/` junto com a versão Python.
 
+## Versão C++
+
+Em `cpp/main.cpp` há a mesma lógica em C++17 com [SDL2](https://www.libsdl.org/). Não usa imagens nem fontes externas (o texto usa uma fonte bitmap embutida, por isso só maiúsculas).
+
+```bash
+# Ubuntu/Debian: sudo apt install build-essential cmake libsdl2-dev
+# macOS:         brew install cmake sdl2
+# Windows:       use o vcpkg (vcpkg install sdl2) ou o MSYS2 (pacman -S mingw-w64-x86_64-SDL2)
+
+cd cpp
+cmake -B build
+cmake --build build
+./build/flappy            # Windows: build\Debug\flappy.exe ou build\flappy.exe
+```
+
+O mesmo código é compilado para WebAssembly com Emscripten pelo workflow e publicado em `/cpp/`.
+
 ## Personalização
 
-As constantes no topo do `main.py` (ou do `<script>` em `js/index.html`) controlam a dificuldade:
+As constantes no topo do `main.py` (ou `<script>` em `js/index.html`, ou `cpp/main.cpp`) controlam a dificuldade:
 `GRAVITY`, `FLAP_STRENGTH`, `PIPE_GAP`, `PIPE_SPEED` e `PIPE_SPACING`.
 
 ## Licença
